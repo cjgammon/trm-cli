@@ -1,0 +1,38 @@
+{
+  "name": "storybot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./bin/index.js",
+  "type": "module",
+  "bin": {
+    "storybot": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cjgammon/storybot.git"
+  },
+  "author": "cjgammon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cjgammon/storybot/issues"
+  },
+  "keywords": [
+    "cli"
+  ],
+  "homepage": "https://github.com/cjgammon/storybot#readme",
+  "dependencies": {
+    "@inquirer/prompts": "^3.1.1",
+    "@inquirer/rawlist": "^1.2.11",
+    "boxen": "^7.1.1",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^9.2.11",
+    "openai": "^4.6.0",
+    "platform-folders": "^0.6.0",
+    "uuid": "^9.0.0",
+    "yargs": "^17.7.2"
+  }
+}
