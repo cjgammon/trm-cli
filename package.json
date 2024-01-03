@@ -1,28 +1,28 @@
 {
-  "name": "storybot",
+  "name": "trm",
   "version": "1.0.0",
   "description": "",
   "main": "./bin/index.js",
   "type": "module",
   "bin": {
-    "storybot": "./bin/index.js"
+    "trm": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cjgammon/storybot.git"
+    "url": "git+https://github.com/cjgammon/trm-cli.git"
   },
   "author": "cjgammon",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cjgammon/storybot/issues"
+    "url": "https://github.com/cjgammon/trm-cli/issues"
   },
   "keywords": [
     "cli"
   ],
-  "homepage": "https://github.com/cjgammon/storybot#readme",
+  "homepage": "https://github.com/cjgammon/trm-cli#readme",
   "dependencies": {
     "@inquirer/prompts": "^3.1.1",
     "@inquirer/rawlist": "^1.2.11",

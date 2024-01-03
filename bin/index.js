@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+import { exec } from "child_process";
 
 import chalk from "chalk";
 import boxen from "boxen";
@@ -8,10 +9,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import OpenAI from "openai";
 
-import storyModel from "./storyModel.js";
-
-import { STORY_CIRCLE, MAX_STEPS } from "./consts.js";
-import { input } from "@inquirer/prompts";
+import { input, confirm } from "@inquirer/prompts";
 import rawlist from "@inquirer/rawlist";
 
 import _yargs from "yargs";
@@ -19,7 +17,6 @@ import { hideBin } from "yargs/helpers";
 const yargs = _yargs(hideBin(process.argv));
 
 const __filename = fileURLToPath(import.meta.url);
-
 const __dirname = path.dirname(__filename);
 
 dotenv.config({
@@ -30,67 +27,88 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are a story outline generator, generate basic story outlines based on a prompt. The outline should be in the format of a story circle. \n The entire story circle is as follows: ${STORY_CIRCLE.map(
-  (step) => {
-    return `${step.name}:${step.description}`;
-  }
-).join(", ")}`;
+const OS_NAME = process.platform;
 
-const usage = `\nUsage: storybot "<prompt>" [options]`;
+const SYSTEM_PROMPT = `\n 
+You are a command line assistant for ${OS_NAME} platform.\n 
+You take user input and translate it into a command that can be run in the terminal.\n
+The resulting command should be able to run in the terminal.\n 
+the output of the command should return the kind of results the user asks for.\n
+If the user puts text in quotes, or any other values are specified use these as variables or params that are included in the command.\n
 
-console.log(
-  chalk.green(
-    boxen("Storybot", {
-      padding: 0.5,
-      borderStyle: "classic",
-      textAlignment: "center",
-    })
-  )
-);
+For example if the users asks:
+
+"find the text 'run' in this directory"\n
+
+The command should be:\n
+
+grep -r "run" .\n
+
+Replace the text in quotes with the text the user wants to find, and the path to the file they want to search.\n
+Only provide the command, no description text or any extra information.\n
+Do not add any placeholder text or properties.\n
+If no directory or context is provided assume it is global.\n
+\n`;
+
+const usage = `\nUsage: trm "<prompt>" [options]`;
 
 yargs
   .usage(usage)
-  .option("l", {
-    alias: "load",
-    describe: "load story from file",
-    type: "string",
-    demandOption: false,
-  })
   .option("t", {
     alias: "temperature",
     describe: "creativity of output [0-2] (default: 1)",
     type: "number",
     demandOption: false,
   })
-  .option("o", {
-    alias: "output",
-    describe: "output directory",
-    type: "string",
-    demandOption: false,
-  })
 
   .help(true).argv;
 
 const TEMP = yargs.argv.t || 1;
-const FILE_TO_LOAD = yargs.argv.l || null;
-const OUTPUT_DIR = yargs.argv.o || null;
-
-console.log(chalk.red(`TEMP: ${TEMP}`));
 
 let storyIndex = 0;
 
-runStorybot();
+run();
 
 function handlePromptError(error) {
   if (error.isTtyError) {
     //console.error("The prompt was closed by the user.");
     // Optionally, you can ask the user if they want to restart the prompt.
   } else {
-    //console.error("An error occurred:", error);
+    console.error("An error occurred:", error);
     // Handle other errors as needed.
   }
 }
 
+async function runCommand(command) {
+  console.log("hi", command);
+  try {
+    const answer = await confirm({
+      message: `run command: ${command}`,
+    });
+
+    if (answer) {
+      exec(
+        command,
+        { maxBuffer: 1000 * 1000 * 10 },
+        (error, stdout, stderr) => {
+          if (error) {
+            console.log(chalk.red(`error: ${error.message}, ${error.code}`));
+            return;
+          }
+          if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+          }
+          console.log(chalk.blue(stdout));
+        }
+      );
+    }
+  } catch (e) {
+    handlePromptError(e);
+  }
+}
+
+/*
 async function storyPoint(options) {
   options.push({ value: options.length, name: "explore more" });
   try {
@@ -100,16 +118,11 @@ async function storyPoint(options) {
     });
 
     if (answer === options.length - 1) {
-      /*
-      console.log(`Current Prompt: ${storyModel.prompt}`);
-      prompt = await input({ message: "please elaborate" });
-      storyModel.appendPrompt(prompt);
-      */
-      requestOptions(storyModel.prompt, storyIndex);
+      //requestOptions(storyModel.prompt, storyIndex);
     } else {
-      storyModel.addStoryPointAt(answer, storyIndex);
+      //storyModel.addStoryPointAt(answer, storyIndex);
 
-      storyModel.writeStoryToFile(`${storyModel.getFileName()}.txt`);
+      //storyModel.writeStoryToFile(`${storyModel.getFileName()}.txt`);
 
       if (storyIndex === MAX_STEPS - 1) {
         console.log("story complete");
@@ -117,48 +130,31 @@ async function storyPoint(options) {
       }
 
       storyIndex++;
-      requestOptions(storyModel.prompt, storyIndex);
+      //requestOptions(storyModel.prompt, storyIndex);
     }
   } catch (e) {
     handlePromptError(e);
   }
 }
+*/
 
-async function runStorybot() {
-  if (FILE_TO_LOAD) {
-    await storyModel.loadStoryFromFile(FILE_TO_LOAD);
-    storyIndex = storyModel.storyPoints.length;
-    requestOptions(storyModel.prompt, storyIndex);
+async function run() {
+  //let prompt = yargs.argv._[0];
+  const prompt = yargs.argv._.join(" ");
+
+  console.log(chalk.green("running command: " + prompt));
+
+  if (prompt == null) {
+    console.log(chalk.red("you must provide a prompt"));
     return;
   }
 
-  if (OUTPUT_DIR) {
-    storyModel.setSavePath(OUTPUT_DIR);
-  }
-
-  let prompt = yargs.argv._[0];
-
-  if (prompt == null) {
-    try {
-      prompt = await input({ message: "describe your story" });
-    } catch (e) {
-      handlePromptError(e);
-    }
-  }
-
-  console.log(chalk.hex("#ff00ff")(prompt));
-  storyModel.prompt = prompt;
-
-  requestOptions(storyModel.prompt, storyIndex);
-  //then prompt with clarifying questions.
+  //make request
+  await requestOptions(prompt);
 }
 
 async function requestOptions(prompt, index = 0) {
-  let USER_PROMPT = `Create 3 options to pass to storyPoint function: using ${prompt} as the story prompt, and ${STORY_CIRCLE[index].name}:${STORY_CIRCLE[index].description} as the part of the story circle we are giving options for.`;
-
-  if (storyModel.storyPoints.length > 0) {
-    USER_PROMPT += ` \n\n The story so far: ${storyModel.getStory()}`;
-  }
+  let USER_PROMPT = `${prompt}`;
 
   const chatCompletion = await openai.chat.completions.create({
     messages: [
@@ -173,27 +169,17 @@ async function requestOptions(prompt, index = 0) {
     ],
     functions: [
       {
-        name: "story_point",
-        description: "generate story point options",
+        name: "run_command",
+        description: "run a command in the terminal",
         parameters: {
           type: "object",
           properties: {
-            options: {
-              type: "array",
-              description: "list of story point options",
-              items: {
-                type: "object",
-                description: "story point option object",
-                properties: {
-                  value: {
-                    type: "string",
-                    description: "story point option text",
-                  },
-                },
-              },
+            command: {
+              type: "string",
+              description: "string to run in the terminal",
             },
           },
-          required: ["options"],
+          required: ["command"],
         },
       },
     ],
@@ -203,20 +189,26 @@ async function requestOptions(prompt, index = 0) {
     top_p: 1,
   });
 
+  //console.log("done" + JSON.stringify(chatCompletion, null, 2));
+
   const responseMessage = chatCompletion.choices[0].message;
 
   if (responseMessage.function_call) {
     try {
       const availableFunctions = {
-        story_point: storyPoint,
-      }; // only one function in this example, but you can have multiple
+        run_command: runCommand,
+      };
       const functionName = responseMessage.function_call.name;
       const functionToCall = availableFunctions[functionName];
       const functionArgs = JSON.parse(responseMessage.function_call.arguments);
-      const functionResponse = functionToCall(functionArgs.options);
+      const functionResponse = functionToCall(functionArgs.command);
     } catch (e) {
-      console.log(e + ": " + JSON.stringify(responseMessage.function_call));
+      console.log(
+        "ERR" + e + ": " + JSON.stringify(responseMessage.function_call)
+      );
       //try again??
     }
+  } else {
+    console.log("no function call");
   }
 }

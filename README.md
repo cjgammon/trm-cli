@@ -8,6 +8,8 @@ add `.env` file to `bin` with:
 OPENAI_API_KEY=<YOUR_API_KEY>
 ```
 
+NOTE:: may need sudo
+
 ```
 npm install -g
 ```
