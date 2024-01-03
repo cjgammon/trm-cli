@@ -80,7 +80,6 @@ function handlePromptError(error) {
 }
 
 async function runCommand(command) {
-  console.log("hi", command);
   try {
     const answer = await confirm({
       message: `run command: ${command}`,
@@ -141,8 +140,6 @@ async function storyPoint(options) {
 async function run() {
   //let prompt = yargs.argv._[0];
   const prompt = yargs.argv._.join(" ");
-
-  console.log(chalk.green("running command: " + prompt));
 
   if (prompt == null) {
     console.log(chalk.red("you must provide a prompt"));
