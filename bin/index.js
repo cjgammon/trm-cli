@@ -74,7 +74,7 @@ function handlePromptError(error) {
     //console.error("The prompt was closed by the user.");
     // Optionally, you can ask the user if they want to restart the prompt.
   } else {
-    console.error("An error occurred:", error);
+    //console.error("An error occurred:", error);
     // Handle other errors as needed.
   }
 }
@@ -106,36 +106,6 @@ async function runCommand(command) {
     handlePromptError(e);
   }
 }
-
-/*
-async function storyPoint(options) {
-  options.push({ value: options.length, name: "explore more" });
-  try {
-    const answer = await rawlist({
-      message: `select an option for: ${STORY_CIRCLE[storyIndex].name}`,
-      choices: options,
-    });
-
-    if (answer === options.length - 1) {
-      //requestOptions(storyModel.prompt, storyIndex);
-    } else {
-      //storyModel.addStoryPointAt(answer, storyIndex);
-
-      //storyModel.writeStoryToFile(`${storyModel.getFileName()}.txt`);
-
-      if (storyIndex === MAX_STEPS - 1) {
-        console.log("story complete");
-        return;
-      }
-
-      storyIndex++;
-      //requestOptions(storyModel.prompt, storyIndex);
-    }
-  } catch (e) {
-    handlePromptError(e);
-  }
-}
-*/
 
 async function run() {
   //let prompt = yargs.argv._[0];
@@ -185,8 +155,6 @@ async function requestOptions(prompt, index = 0) {
     temperature: TEMP,
     top_p: 1,
   });
-
-  //console.log("done" + JSON.stringify(chatCompletion, null, 2));
 
   const responseMessage = chatCompletion.choices[0].message;
 
