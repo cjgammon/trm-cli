@@ -47,6 +47,7 @@ grep -r "run" .\n
 Replace the text in quotes with the text the user wants to find, and the path to the file they want to search.\n
 Only provide the command, no description text or any extra information.\n
 Do not add any placeholder text or properties.\n
+Stop and think about it, make sure there are no made up commands.\n
 If no directory or context is provided assume it is global.\n
 \n`;
 
@@ -101,6 +102,26 @@ async function runCommand(command) {
           console.log(chalk.blue(stdout));
         }
       );
+
+      return;
+    }
+
+    const copy = await confirm({
+      message: `copy command: ${command}`,
+    });
+
+    if (copy) {
+      exec(`echo ${command} | pbcopy`, (error, stdout, stderr) => {
+        if (error) {
+          console.log(chalk.red(`error: ${error.message}, ${error.code}`));
+          return;
+        }
+        if (stderr) {
+          console.log(`stderr: ${stderr}`);
+          return;
+        }
+        console.log(chalk.blue(stdout));
+      });
     }
   } catch (e) {
     handlePromptError(e);
